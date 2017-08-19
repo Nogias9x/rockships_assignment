@@ -1,12 +1,15 @@
-// // node app "(_id==102 || (active==true && shared==false) && verified==true)"
+// // node app "(_id==102|(active=true&shared=false)&verified=true)"
+// // node app "(1=12|(2=3&4=4)&5=5)"
+// 5.5/2+3*(4/8–2)
+// 5.5=2|3=(4=8&2)
+//
+//
 'use strict';
-const String = require('./SuperString.js');
 const Array = require('./StackArray.js');
 
 function getPriority(ope) {
-  // Ta có thể set quyền cao hơn ở đây. VD như if (ope == "^") return 3;
-  if (ope == "*" || ope == "/") return 2;
-  else if (ope == "+" || ope == "-") return 1;
+  if (ope == "=") return 2;
+  else if (ope == "&" || ope == "|") return 1;
   else return 0;
 }
 
@@ -25,36 +28,41 @@ function ConvertToPostfix(exp) {
   // Ta cần phải add toàn bộ các kí tự số đó vào chuỗi number
   var number = "";
   for (let s of exp) {
-    if (isOperator(s) == 0) number += s;
+    console.log('S: ' + s);
+    if (isOperator(s) == 0){
+      number += s;
+      console.log('number: ' + number);
+
+    }
     else {
       // Push toán hạng vào Output
       if (number.length > 0) {
-        Output.push(number);
+        Output.myPush(number);
         number = "";
       }
       if (isOperator(s) == 1) {
-        if (s == "(") Stack.push("(");
+        if (s == "(") Stack.myPush("(");
         else if (s == ")") {
           var pop = Stack.pop();
           while (pop != "(") {
-            Output.push(pop);
+            Output.myPush(pop);
             pop = Stack.pop();
           }
         }
       }
       else {
         while (!Stack.empty() && getPriority(Stack.back()) >= getPriority(s))
-          Output.push(Stack.pop());
-        Stack.push(s);
+          Output.myPush(Stack.pop());
+        Stack.myPush(s);
       }
     }
   }
   // Trường hợp còn sót lại toán hạng cuối cùng
   if (number.length > 0) {
-    Output.push(number);
+    Output.myPush(number);
     number = "";
   }
-  while (!Stack.empty()) Output.push(Stack.pop());
+  while (!Stack.empty()) Output.myPush(Stack.pop());
   console.log('POSTFIX: ' + Output);
   return Output;
 }
@@ -67,21 +75,18 @@ function Calc(Input) {
     console.log('ITEM: ' + item);
     if (isOperator(item) == 0) Stack.myPush(item);
     else {
-      // Do ta cần quan tâm đến thứ tự các toán hạng
-      // Nên ta phải Pop vế sau trước, sau đó vế trước mới Pop sau
-      var b = parseFloat(Stack.pop());
-      var a = parseFloat(Stack.pop());
+      var a = Stack.pop();
+      var b = Stack.pop();
 
-      if (item == "+") Stack.myPush(a + b);
-      else if (item == "-") Stack.myPush(a - b);
-      else if (item == "*") Stack.myPush(a * b);
-      else if (item == "/") Stack.myPush(a / b);
+      if (item == "=") Stack.myPush(a == b ? true : false);
+      else if (item == "|") Stack.myPush((a == true || b == true) ? true : false);
+      else if (item == "&") Stack.myPush((a == true && b == true) ? true : false);
+
     }
   }
-  return parseFloat(Stack.pop());
+  return Stack.pop();
 }
 
-// 5.5/2+3*(4/8–2)
-var exp ='5.5/2+3*(4/8-2)';
-// console.log(ConvertToPostfix(exp));
-console.log(Calc(ConvertToPostfix(exp)));
+var expression = process.argv.slice(2);
+console.log('expression: ' + expression[0]);
+console.log(Calc(ConvertToPostfix(expression[0])));
