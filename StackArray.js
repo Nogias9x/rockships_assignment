@@ -1,9 +1,3 @@
-Array.prototype.myPush = function(value) {
-    this.push(value);
-    // console.log('PUSH: ' + this);
-
-};
-
 Array.prototype.back = function() {
     return this[this.length-1];
 };
