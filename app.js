@@ -5,7 +5,9 @@
 //
 //
 'use strict';
-const Array = require('./StackArray.js');
+const Array = require('./StackArray.js'),
+      fs = require('fs'),
+      q = require('q');
 
 function getPriority(ope) {
   if (ope == "=") return 2;
@@ -88,5 +90,33 @@ function Calc(Input) {
 }
 
 var expression = process.argv.slice(2);
-console.log('expression: ' + expression[0]);
-console.log(Calc(ConvertToPostfix(expression[0])));
+// console.log('expression: ' + expression[0]);
+// console.log(Calc(ConvertToPostfix(expression[0])));
+
+/////////////////////////////////////
+// read JSON object from .json file
+function readJsonFilePromise(path, encoding) {
+  var defer = q.defer();
+  fs.readFile(path, encoding, function (error, text) {
+    if (error) {
+      defer.reject(new Error(error));
+    } else {
+      var objects = JSON.parse(text);
+      defer.resolve(objects);
+    }
+  });
+  return defer.promise;
+}
+
+q.all([
+  readJsonFilePromise('./data/users.json', 'utf-8'),
+  readJsonFilePromise('./data/projects.json', 'utf-8'),
+]).spread(function(users, projects) {
+  console.log(users);
+  console.log('///////////////////////');
+  console.log(projects);
+
+  // search
+}).catch(function(error) {
+  console.log(error);
+});
