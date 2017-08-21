@@ -1,6 +1,6 @@
 Array.prototype.myPush = function(value) {
     this.push(value);
-    console.log('PUSH: ' + this);
+    // console.log('PUSH: ' + this);
 
 };
 

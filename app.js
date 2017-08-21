@@ -1,9 +1,5 @@
-// // node app "(_id==102|(active=true&shared=false)&verified=true)"
-// // node app "(1=12|(2=3&4=4)&5=5)"
-// 5.5/2+3*(4/8–2)
-// 5.5=2|3=(4=8&2)
-//
-//
+// node app "((name=Joni Mitchell)&(active=true))|((_id=101)&(name=My first project))"
+
 'use strict';
 const Array = require('./StackArray.js'),
       fs = require('fs'),
@@ -26,17 +22,11 @@ function isOperator(ope) {
 function ConvertToPostfix(exp) {
   var Stack = [];
   var Output = [];
-  // Do có những toán hạng lớn hơn 10, hoặc số thập phân => Có nhiều hơn 1 ký tự
-  // Ta cần phải add toàn bộ các kí tự số đó vào chuỗi number
   var number = "";
   for (let s of exp) {
-    console.log('S: ' + s);
-    if (isOperator(s) == 0){
+    if (isOperator(s) == 0) {
       number += s;
-      console.log('number: ' + number);
-
-    }
-    else {
+    } else {
       // Push toán hạng vào Output
       if (number.length > 0) {
         Output.myPush(number);
@@ -65,36 +55,35 @@ function ConvertToPostfix(exp) {
     number = "";
   }
   while (!Stack.empty()) Output.myPush(Stack.pop());
-  console.log('POSTFIX: ' + Output);
   return Output;
 }
 
 
 
-function Calc(Input) {
+function Calc(object, expression) {
+  var Input = ConvertToPostfix(expression);
   var Stack = [];
   for (let item of Input) {
-    console.log('ITEM: ' + item);
     if (isOperator(item) == 0) Stack.myPush(item);
     else {
-      var a = Stack.pop();
       var b = Stack.pop();
+      var a = Stack.pop();
 
-      if (item == "=") Stack.myPush(a == b ? true : false);
-      else if (item == "|") Stack.myPush((a == true || b == true) ? true : false);
+      if (item == "=") {
+        if (!object[a]) Stack.myPush(a.toString() == b.toString() ? true : false);
+        else Stack.myPush(object[a].toString() == b.toString() ? true : false);
+      } else if (item == "|") Stack.myPush((a == true || b == true) ? true : false);
       else if (item == "&") Stack.myPush((a == true && b == true) ? true : false);
-
     }
   }
   return Stack.pop();
 }
 
-var expression = process.argv.slice(2);
-// console.log('expression: ' + expression[0]);
-// console.log(Calc(ConvertToPostfix(expression[0])));
+var expression = process.argv.slice(2)[0];
+console.log('expression: ' + expression);
 
 /////////////////////////////////////
-// read JSON object from .json file
+// đọc JSON object từ file .json
 function readJsonFilePromise(path, encoding) {
   var defer = q.defer();
   fs.readFile(path, encoding, function (error, text) {
@@ -112,11 +101,22 @@ q.all([
   readJsonFilePromise('./data/users.json', 'utf-8'),
   readJsonFilePromise('./data/projects.json', 'utf-8'),
 ]).spread(function(users, projects) {
-  console.log(users);
-  console.log('///////////////////////');
-  console.log(projects);
-
   // search
+  var index = 1;
+  for (let user of users) {
+    if (Calc(user, expression) == true) {
+      console.log(index + '. ///////////////////////');
+      index++;
+      console.log(user);
+    }
+  }
+  for (let project of projects) {
+    if (Calc(project, expression) == true) {
+      console.log(index + '. ///////////////////////');
+      index++;
+      console.log(project);
+    }
+  }
 }).catch(function(error) {
   console.log(error);
 });
